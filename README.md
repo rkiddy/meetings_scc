@@ -3,6 +3,7 @@
 Scrape data from the Meetings page of Santa Clara County for the purpose of notifications.
 
 To run:
+
      % virtualenv .venv
      % source .venv/bin/activate
      % pip install -r requirements.txt (when this is properly created)
