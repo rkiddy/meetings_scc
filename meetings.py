@@ -100,7 +100,7 @@ for scrape in scraped:
         })
 
 for add in to_add:
-    sql = f"""insert into meetings values (
+    sql = f"""insert into meetings (pk, mtg_name, mtg_time, mods) values (
             {next_pk}, '{add['name']}', 
             '{add['when']}', '{add['mods']}')"""
     if verbose:
