@@ -121,12 +121,13 @@ def insert_meetings(meetings):
         mods = meetings[scrape]
         pk += 1
         sql = f"""insert into meetings
-                (pk, mtg_name, mtg_time, scp_time, mods) values (
+                (pk, mtg_name, mtg_time, scp_time, mods, created) values (
                 {pk},
                 '{mtg_name}',
                 '{mtg_time}',
                 '{scp_time}',
-                '{mods}')"""
+                '{mods}',
+                unix_timestamp())"""
         if verbose:
             print(f"\n{sql}")
         if not dry_run:
@@ -140,7 +141,7 @@ def update_meetings(meetings):
         mtg_name, scp_time = scrape.split("|")
         mtg_name = mtg_name.replace("'", "''")
         mods = meetings[scrape]
-        sql = f"""update meetings set mods = '{mods}'
+        sql = f"""update meetings set mods = '{mods}', updated = unix_timestamp()
             where mtg_name = '{mtg_name}' and scp_time = '{scp_time}'"""
         if verbose:
             print(f"\n{sql}")
