@@ -80,7 +80,7 @@ def fetch_db_meetings():
     rows = conn.execute("select * from meetings").fetchall()
     meetings = dict()
     for row in rows:
-        meetings[f"{row['mtg_name']}|{row['scp_time']}"] = row['mods']
+        meetings[f"{row['full_name']}|{row['scp_time']}"] = row['mods']
 
     if verbose:
         print(f"\nmeetings:\n")
@@ -115,19 +115,19 @@ def insert_meetings(meetings):
         pk = int(pk_row['max'])
 
     for scrape in meetings:
-        mtg_name, scp_time = scrape.split("|")
-        mtg_name = mtg_name.replace("'", "''")
+        full_name, scp_time = scrape.split('|')
+        full_name = full_name.replace("'", "''")
+        mtg_name, sub_name = full_name.split(' - ')
         mtg_time = next_date_value(date_value(scp_time))
         mods = meetings[scrape]
         pk += 1
         sql = f"""insert into meetings
-                (pk, mtg_name, mtg_time, scp_time, mods, created) values (
+                (pk, full_name, mtg_name, sub_name, mtg_time, scp_time, mods, created, updated) values (
                 {pk},
-                '{mtg_name}',
-                '{mtg_time}',
-                '{scp_time}',
+                '{full_name}', '{mtg_name}', '{sub_name}',
+                '{mtg_time}', '{scp_time}',
                 '{mods}',
-                unix_timestamp())"""
+                unix_timestamp(), unix_timestamp())"""
         if verbose:
             print(f"\n{sql}")
         if not dry_run:
@@ -138,11 +138,11 @@ def insert_meetings(meetings):
 
 def update_meetings(meetings):
     for scrape in meetings:
-        mtg_name, scp_time = scrape.split("|")
-        mtg_name = mtg_name.replace("'", "''")
+        full_name, scp_time = scrape.split('|')
+        full_name = full_name.replace("'", "''")
         mods = meetings[scrape]
         sql = f"""update meetings set mods = '{mods}', updated = unix_timestamp()
-            where mtg_name = '{mtg_name}' and scp_time = '{scp_time}'"""
+            where full_name = '{full_name}' and scp_time = '{scp_time}'"""
         if verbose:
             print(f"\n{sql}")
         if not dry_run:
