@@ -1,0 +1,59 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+    <title>Santa Clara County Meetings Schedules</title>
+    {% include "styles.html" %}
+    {% include "datatable.html" %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#meetings').DataTable(
+                {
+                    "paging": false,
+                    "columns": [
+                        {"name": "Name", "orderable": true},
+                        {"name": "Type", "orderable": true},
+                        {"name": "Date/Time", "orderable": true},
+                        {"name": "Info", "orderable": true},
+                        {"name": "Created", "orderable": true},
+                        {"name": "Updated", "orderable": true}
+                    ]
+                }
+            );
+        });
+    </script>
+
+</head>
+<body>
+<div style="padding: 25px 25px 25px 25px;">
+    <h3>Santa Clara County Board and Commission Meetings</h3>
+    <table class="table table-striped" id="meetings">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Date/Time</th>
+                <th>Info</th>
+                <th>Created</th>
+                <th>Updated</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for meeting in meetings %}
+        <tr>
+            <td>{{ meeting.mtg_name }}</td>
+            <td>{{ meeting.sub_name }}</td>
+            <td style="white-space: nowrap;">{{ meeting.mtg_time }}</td>
+            <td>{{ meeting.mods }}</td>
+            <td>{{ meeting.created }}</td>
+            <td>
+                {% if meeting.updated != meeting.created %}
+                {{ meeting.updated }}
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
