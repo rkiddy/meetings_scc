@@ -9,7 +9,7 @@ cfg = dotenv_values(".env")
 engine = create_engine(f"mysql+pymysql://{cfg['USR']}:{cfg['PWD']}@{cfg['HOST']}/{cfg['DB']}")
 conn = engine.connect()
 
-def meetings_main():
+def meetings_main() -> dict:
     context = dict()
 
     sql = "select * from meetings order by mtg_time"

@@ -22,17 +22,17 @@ engine = create_engine(f"mysql+pymysql://{cfg['USR']}:{cfg['PWD']}@{cfg['HOST']}
 conn = engine.connect()
 
 
-def date_value(scraped_date):
+def date_value(scraped_date) -> datetime:
     # eg Jan 6, 2023 12:15 PM
     d = datetime.strptime(scraped_date, "%b %d, %Y %I:%M %p")
     return d
 
 
-def next_date_value(dt):
+def next_date_value(dt) -> str:
     return dt.strftime("%Y-%m-%d %H:%M")
 
 
-def scrape_meetings():
+def scrape_meetings() -> dict:
 
     agent1 = "--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6)"
     agent2 = "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36"
@@ -75,7 +75,7 @@ def scrape_meetings():
     return scraped
 
 
-def fetch_db_meetings():
+def fetch_db_meetings() -> dict:
 
     rows = conn.execute("select * from meetings").fetchall()
     meetings = dict()
@@ -89,7 +89,7 @@ def fetch_db_meetings():
     return meetings
 
 
-def added_meetings(scraped, fetched):
+def added_meetings(scraped, fetched) -> dict:
     found = dict()
     for scrape_key in scraped:
         if scrape_key not in fetched:
@@ -97,7 +97,7 @@ def added_meetings(scraped, fetched):
     return found
 
 
-def updated_meetings(scraped, fetched):
+def updated_meetings(scraped, fetched) -> dict:
     found = dict()
     for scrape_key in scraped:
         if scrape_key in fetched:
@@ -106,7 +106,7 @@ def updated_meetings(scraped, fetched):
     return found
 
 
-def insert_meetings(meetings):
+def insert_meetings(meetings) -> int:
 
     pk_row = conn.execute("select max(pk) as max from meetings").fetchone()
     if pk_row['max'] is None:
@@ -136,7 +136,7 @@ def insert_meetings(meetings):
     return len(scraped_mtgs)
 
 
-def update_meetings(meetings):
+def update_meetings(meetings) -> int:
     for scrape in meetings:
         full_name, scp_time = scrape.split('|')
         full_name = full_name.replace("'", "''")
