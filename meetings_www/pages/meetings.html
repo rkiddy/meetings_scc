@@ -9,23 +9,23 @@
             $('#meetings').DataTable(
                 {
                     "paging": false,
-                    "columns": [
-                        {"name": "Name", "orderable": true},
-                        {"name": "Type", "orderable": true},
-                        {"name": "Date/Time", "orderable": true},
-                        {"name": "Info", "orderable": true},
-                        {"name": "Created", "orderable": true},
-                        {"name": "Updated", "orderable": true}
-                    ]
+                    "order": [[2, "asc"]]
                 }
             );
         });
     </script>
-
 </head>
 <body>
 <div style="padding: 25px 25px 25px 25px;">
     <h3>Santa Clara County Board and Commission Meetings</h3>
+    <p>
+        Set to:
+        {% if mtgs_displayed == 'all' %}
+        <a href="/meetings/show_curr_mtgs">Show Only Current and Future Meetings</a>
+        {% else %}
+        <a href="/meetings/show_all_mtgs">Show All Meetings</a>
+        {% endif %}
+    </p>
     <table class="table table-striped" id="meetings">
         <thead>
             <tr>
