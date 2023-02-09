@@ -30,5 +30,18 @@ def meetings_main() -> dict:
         if meeting['updated'] is not None:
             meeting['updated'] = dt.fromtimestamp(int(meeting['updated'])).strftime("%Y-%m-%d_%H:%M")
 
+    mtgs_by_pk = dict()
+    for meeting in meetings:
+        mtgs_by_pk[int(meeting['pk'])] = meeting
+
+    sql = "select meeting_pk, name, url from resources"
+
+    resources = [dict(d) for d in conn.execute(sql).fetchall()]
+
+    for resource in resources:
+        mpk = int(resource['meeting_pk'])
+        if mpk in mtgs_by_pk:
+            mtgs_by_pk[mpk][resource['name']] = resource['url']
+
     context['meetings'] = meetings
     return context

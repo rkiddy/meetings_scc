@@ -18,7 +18,6 @@ env = Environment(loader=PackageLoader('meetings', 'pages'))
 
 
 @meetings.route(f"/{cfg['WWW']}")
-@meetings.route(f"/{cfg['WWW']}/")
 def meetings_main():
     main = env.get_template('meetings.html')
     context = data.meetings_main()

@@ -22,9 +22,17 @@ engine = create_engine(f"mysql+pymysql://{cfg['USR']}:{cfg['PWD']}@{cfg['HOST']}
 conn = engine.connect()
 
 
+def get_pk(table_name):
+    pk_row = conn.execute(f"select max(pk) as max from {table_name}").fetchone()
+    if pk_row['max'] is None:
+        return 0
+    else:
+        return int(pk_row['max'])
+
+
 def date_value(scraped_date) -> datetime:
-    # eg Jan 6, 2023 12:15 PM
-    d = datetime.strptime(scraped_date, "%b %d, %Y %I:%M %p")
+    # eg MONDAY, JANUARY 9, 2023  12:00 PM
+    d = datetime.strptime(scraped_date, "%A, %B %d, %Y %I:%M %p")
     return d
 
 
@@ -53,24 +61,57 @@ def scrape_meetings() -> dict:
     sleep(3)
 
     mtg_entries = list()
+
     for elt in driver.find_elements(By.CLASS_NAME, 'MeetingRow'):
-        mtg_entries.append(elt.text)
-    driver.quit()
+
+        mtg_entry = dict()
+
+        mtg_entry['resources'] = list()
+        for img in elt.find_elements(By.TAG_NAME, 'IMG'):
+
+            lines = img.get_attribute('title').split('\r')
+            mtg_entry['when'] = lines[0]
+
+            for line in lines:
+                if line.startswith('Board:'):
+                    mtg_entry['board'] = line.split('\t')[-1]
+                if line.startswith('Type:'):
+                    mtg_entry['type'] = line.split('\t')[-1]
+                if line.startswith('Status:'):
+                    mtg_entry['status'] = line.split('\t')[-1]
+
+        for link in elt.find_elements(By.TAG_NAME, 'A'):
+            if link.get_attribute('href').find('Detail_Meeting') >= 0:
+                mtg_resource = dict()
+                mtg_resource['name'] = 'Detail_Meeting'
+                mtg_resource['url'] = link.get_attribute('href')
+                mtg_entry['resources'].append(mtg_resource)
+
+            if link.get_attribute('class') != 'HiddenDocumentLink':
+                if link.get_attribute('href').find('FileOpen.aspx') >= 0:
+                    mtg_resource = dict()
+                    mtg_resource['name'] = link.text
+                    mtg_resource['url'] = link.get_attribute('href')
+                    mtg_entry['resources'].append(mtg_resource)
+
+            if link.text == 'Video':
+                mtg_resource = dict()
+                mtg_resource['name'] = link.text
+                mtg_entry['resources'].append(mtg_resource)
+
+        mtg_entries.append(mtg_entry)
 
     scraped = dict()
-    for entry in mtg_entries:
-        lines = entry.split('\n')
-        when = lines[0].strip()
-        name = lines[-1].strip()
-        if len(lines) == 3:
-            mods = lines[1].strip()
-        else:
-            mods = ''
-        scraped[f"{name}|{when}"] = mods
+
+    driver.quit()
+
+    for mtg_entry in mtg_entries:
+        key = f"{mtg_entry['board']} - {mtg_entry['type']}|{mtg_entry['when']}"
+        scraped[key] = mtg_entry
 
     if verbose:
-        print(f"\nscraped:\n")
-        pprint(scraped, compact=True)
+        print(f"\nscraped meetings:\n")
+        pprint(mtg_entries, compact=True)
 
     return scraped
 
@@ -108,30 +149,46 @@ def updated_meetings(scraped, fetched) -> dict:
 
 def insert_meetings(meetings) -> int:
 
-    pk_row = conn.execute("select max(pk) as max from meetings").fetchone()
-    if pk_row['max'] is None:
-        pk = 0
-    else:
-        pk = int(pk_row['max'])
+    mtg_pk = get_pk('meetings')
+    res_pk = get_pk('resources')
 
     for scrape in meetings:
+
+        mtg_pk += 1
+
         full_name, scp_time = scrape.split('|')
         full_name = full_name.replace("'", "''")
         mtg_name, sub_name = full_name.split(' - ')
         mtg_time = next_date_value(date_value(scp_time))
-        mods = meetings[scrape]
-        pk += 1
+
         sql = f"""insert into meetings
-                (pk, full_name, mtg_name, sub_name, mtg_time, scp_time, mods, created, updated) values (
-                {pk},
+                (pk, full_name, mtg_name, sub_name, mtg_time, scp_time, status, created, updated)
+                values (
+                {mtg_pk},
                 '{full_name}', '{mtg_name}', '{sub_name}',
                 '{mtg_time}', '{scp_time}',
-                '{mods}',
+                '{meetings[scrape]['status']}',
                 unix_timestamp(), unix_timestamp())"""
         if verbose:
             print(f"\n{sql}")
         if not dry_run:
             conn.execute(sql)
+
+        for resource in meetings[scrape]['resources']:
+
+            if 'url' in resource:
+                url = f"'{resource['url']}'"
+            else:
+                url = 'NULL'
+
+            sql = f"""insert into resources
+                (pk, meeting_pk, name, url)
+                values ({res_pk}, {mtg_pk}, '{resource['name']}', {url})"""
+            if verbose:
+                print(f"\n{sql}")
+            if not dry_run:
+                conn.execute(sql)
+            res_pk += 1
 
     return len(scraped_mtgs)
 

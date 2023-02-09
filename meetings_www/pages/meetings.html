@@ -31,8 +31,9 @@
             <tr>
                 <th>Name</th>
                 <th>Type</th>
-                <th>Date/Time</th>
                 <th>Info</th>
+                <th>Status</th>
+                <th>Date/Time</th>
                 <th>Created</th>
                 <th>Updated</th>
             </tr>
@@ -42,8 +43,32 @@
         <tr>
             <td>{{ meeting.mtg_name }}</td>
             <td>{{ meeting.sub_name }}</td>
+            <td style="white-space: nowrap;">
+                {% if "Agenda" in meeting %}
+                <a href="{{ meeting['Agenda'] }}" target="_blank">A</a>
+                {% endif %}
+                {% if "Agenda Packet" in meeting %}
+                <a href="{{ meeting['Agenda Packet'] }}" target="_blank">AP</a>
+                {% endif %}
+                {% if "Detail_Meeting" in meeting %}
+                <a href="{{ meeting['Detail_Meeting'] }}" target="_blank">D</a>
+                {% endif %}
+                {% if "Video" in meeting %}
+                <a href="{{ meeting['Video'] }}" target="_blank">V</a>
+                {% endif %}
+                {% if "Minutes" in meeting %}
+                <a href="{{ meeting['Minutes'] }}" target="_blank">M</a>
+                {% endif %}
+                {% if "Summary of Proceedings" in meeting %}
+                <a href="{{ meeting['Summary of Proceedings'] }}" target="_blank">SP</a>
+                {% endif %}
+            </td>
+            <td>
+                {% if meeting.status != 'Scheduled' %}
+                {{ meeting.status }}
+                {% endif %}
+            </td>
             <td style="white-space: nowrap;">{{ meeting.mtg_time }}</td>
-            <td>{{ meeting.mods }}</td>
             <td>{{ meeting.created }}</td>
             <td>
                 {% if meeting.updated != meeting.created %}
