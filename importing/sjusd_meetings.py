@@ -160,7 +160,7 @@ def update_meetings(updated_found):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--verbose', '-v', action='store_true')Python tests in test.py
+    parser.add_argument('--verbose', '-v', action='store_true')
     parser.add_argument('--dry-run', action='store_true')
 
     args = parser.parse_args()
