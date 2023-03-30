@@ -1,10 +1,9 @@
 
-from dotenv import dotenv_values
-from sqlalchemy import create_engine
-
-from flask import session
-
 from datetime import datetime as dt
+
+from dotenv import dotenv_values
+from flask import session
+from sqlalchemy import create_engine
 
 cfg = dotenv_values(".env")
 
