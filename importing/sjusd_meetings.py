@@ -106,9 +106,6 @@ def find_new_meetings(all_found):
 
     return added_mtgs
 
-def find_updated_meetings(all_found):
-    return []
-
 def save_meetings(new_found):
 
     sql = "select max(pk) as pk from meetings"
@@ -154,8 +151,13 @@ def save_meetings(new_found):
         sql = f"insert into meetings ({', '.join(cols)}) values ({', '.join(values)})"
         db_exec(engine, sql)
 
+
+def find_updated_meetings(all_found):
+    return []
+
 def update_meetings(updated_found):
     pass
+
 
 if __name__ == '__main__':
 
@@ -170,17 +172,16 @@ if __name__ == '__main__':
 
     try:
         lines = fetch_web('https://simbli.eboardsolutions.com/SB_Meetings/SB_MeetingListing.aspx?S=36030421')
-        print(f"lines found in web site: {len(lines)}")
 
         found = fetch_sjusd_meeting_dates(lines)
-        print(f"meetings found: {len(found)}")
+        print(f"\nmeetings fetched # {len(found)}")
 
         new_mtgs = find_new_meetings(found)
-        print(f"new meetings found: {len(new_mtgs)}")
+        if len(new_mtgs) > 0:
+            save_meetings(new_mtgs)
+        print(f"\nmeetings unchanged # {len(found) - len(new_mtgs)}, added # {len(new_mtgs)}")
 
         updated_mtgs = find_updated_meetings(found)
-
-        save_meetings(new_mtgs)
         update_meetings(updated_mtgs)
 
     except Exception as e:
