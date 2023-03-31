@@ -205,7 +205,7 @@ def insert_meetings(meetings) -> int:
     for scrape in meetings:
 
         if epk is None:
-            epk = get_entity_pk('SCCBoS')
+            epk = get_entity_pk('SCC')
 
         mtg_pk += 1
 
