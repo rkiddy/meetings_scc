@@ -21,22 +21,25 @@ conn = engine.connect()
 
 
 def get_pk(table_name):
-    pk_row = conn.execute(f"select max(pk) as max from {table_name}").fetchone()
+    sql = f"select max(pk) as max from {table_name}"
+    pk_row = conn.execute(sql).fetchone()
     if pk_row['max'] is None:
         return 0
     else:
         return int(pk_row['max'])
 
 
+def get_entity_pk(entity_code):
+    sql = f"select pk from mtg_entities where short_code = '{entity_code}'"
+    return conn.execute(sql).fetchone()
+
 def date_value(scraped_date) -> datetime:
     # eg MONDAY, JANUARY 9, 2023  12:00 PM
     d = datetime.strptime(scraped_date, "%A, %B %d, %Y %I:%M %p")
     return d
 
-
 def next_date_value(dt) -> str:
     return dt.strftime("%Y-%m-%d %H:%M")
-
 
 def scrape_meetings() -> dict:
     """
@@ -197,7 +200,12 @@ def insert_meetings(meetings) -> int:
     mtg_pk = get_pk('meetings')
     res_pk = get_pk('resources')
 
+    epk = None
+
     for scrape in meetings:
+
+        if epk is None:
+            epk = get_entity_pk('SCCBoS')
 
         mtg_pk += 1
 
@@ -207,9 +215,9 @@ def insert_meetings(meetings) -> int:
         mtg_time = next_date_value(date_value(scp_time))
 
         sql = f"""insert into meetings
-                (pk, full_name, mtg_name, sub_name, mtg_time, scp_time, status, created, updated)
+                (pk, entity_pk, full_name, mtg_name, sub_name, mtg_time, scp_time, status, created, updated)
                 values (
-                {mtg_pk},
+                {mtg_pk}, {epk},
                 '{full_name}', '{mtg_name}', '{sub_name}',
                 '{mtg_time}', '{scp_time}',
                 '{meetings[scrape]['status']}',
