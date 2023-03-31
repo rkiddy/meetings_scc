@@ -10,19 +10,45 @@ cfg = dotenv_values(".env")
 engine = create_engine(f"mysql+pymysql://{cfg['USR']}:{cfg['PWD']}@{cfg['HOST']}/{cfg['DB']}")
 conn = engine.connect()
 
-def meetings_main() -> dict:
+def db_exec(sql_engine, sql):
+    if sql.strip().startswith('select'):
+        return [dict(r) for r in sql_engine.execute(sql).fetchall()]
+    else:
+        return sql_engine.execute(sql)
+
+def meetings_main(short_code) -> dict:
     context = dict()
+
+    context['code'] = short_code
+
+    if short_code == '':
+        sql = "select name, short_code from mtg_entities"
+        entities = db_exec(conn, sql)
+        context['entities'] = entities
+        return context
+    else:
+        sql = f"select name from mtg_entities where short_code = '{short_code}'"
+        context['entity'] = db_exec(conn, sql)[0]['name']
 
     mtgs_displayed = session.get('mtgs_displayed')
     context['mtgs_displayed'] = mtgs_displayed
 
     if mtgs_displayed == 'all':
-        sql = "select * from meetings"
+        sql = f"""
+            select * from meetings m1, mtg_entities e1
+            where m1.entity_pk = e1.pk
+                and e1.short_code = '{short_code}'
+        """
     else:
         now = dt.now().strftime('%Y-%m-%d 00:00:00')
-        sql = f"select * from meetings where mtg_time >= '{now}'"
+        sql = f"""
+            select * from meetings m1, mtg_entities e1
+            where m1.entity_pk = e1.pk
+                and e1.short_code = '{short_code}'
+                and mtg_time >= '{now}'
+        """
 
-    meetings = [dict(d) for d in conn.execute(sql).fetchall()]
+    meetings = db_exec(conn, sql)
 
     for meeting in meetings:
         meeting['created'] = dt.fromtimestamp(int(meeting['created'])).strftime("%Y-%m-%d_%H:%M")
@@ -33,9 +59,10 @@ def meetings_main() -> dict:
     for meeting in meetings:
         mtgs_by_pk[int(meeting['pk'])] = meeting
 
+    # TODO not necessary to limit this fetch to the entity. But when there are more...
     sql = "select meeting_pk, name, url from resources"
 
-    resources = [dict(d) for d in conn.execute(sql).fetchall()]
+    resources = db_exec(conn, sql)
 
     for resource in resources:
         mpk = int(resource['meeting_pk'])

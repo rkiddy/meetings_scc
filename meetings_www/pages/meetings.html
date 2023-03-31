@@ -1,7 +1,13 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
 <html>
 <head>
-    <title>Santa Clara County Meetings Schedules</title>
+    <title>
+        {% if code == '' %}
+            Meetings
+        {% else %}
+            {{ entity }} - Meetings
+        {% endif %}
+    </title>
     {% include "styles.html" %}
     {% include "datatable.html" %}
     <script type="text/javascript">
@@ -17,66 +23,79 @@
 </head>
 <body>
 <div style="padding: 25px 25px 25px 25px;">
-    <h3>Santa Clara County Board and Commission Meetings</h3>
-    <p>
-        Set to:
-        {% if mtgs_displayed == 'all' %}
-        <a href="/meetings/show_curr_mtgs">Show Only Current and Future Meetings</a>
-        {% else %}
-        <a href="/meetings/show_all_mtgs">Show All Meetings</a>
-        {% endif %}
-    </p>
-    <table class="table table-striped" id="meetings">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Info</th>
-                <th>Status</th>
-                <th>Date/Time</th>
-                <th>Created</th>
-                <th>Updated</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for meeting in meetings %}
-        <tr>
-            <td>{{ meeting.mtg_name }}</td>
-            <td>{{ meeting.sub_name }}</td>
-            <td style="white-space: nowrap;">
-                {% if "Agenda" in meeting %}
-                <a href="{{ meeting['Agenda'] }}" target="_blank">A</a>
-                {% endif %}
-                {% if "Agenda Packet" in meeting %}
-                <a href="{{ meeting['Agenda Packet'] }}" target="_blank">AP</a>
-                {% endif %}
-                {% if "Detail_Meeting" in meeting %}
-                <a href="{{ meeting['Detail_Meeting'] }}" target="_blank">D</a>
-                {% endif %}
-                {% if "Video" in meeting %}
-                <a href="{{ meeting['Video'] }}" target="_blank">V</a>
-                {% endif %}
-                {% if "Minutes" in meeting %}
-                <a href="{{ meeting['Minutes'] }}" target="_blank">M</a>
-                {% endif %}
-                {% if "Summary of Proceedings" in meeting %}
-                <a href="{{ meeting['Summary of Proceedings'] }}" target="_blank">SP</a>
-                {% endif %}
-            </td>
-            <td>
-                {% if meeting.status != 'Scheduled' %}
-                {{ meeting.status }}
-                {% endif %}
-            </td>
-            <td style="white-space: nowrap;">{{ meeting.mtg_time }}</td>
-            <td>{{ meeting.created }}</td>
-            <td>
-                {% if meeting.updated != meeting.created %}
-                {{ meeting.updated }}
-                {% endif %}
-            </td>
-        </tr>
+    {% if code == '' %}
+        <h3>Available Entities</h3>
+        {% for entity in entities %}
+            <li><a href="/meetings/{{ entity['short_code'] }}">{{ entity['name'] }}</a></li>
         {% endfor %}
+    {% else %}
+        <h3>
+            {% if code == '' %}
+                Meetings
+            {% else %}
+                {{ entity }} - Meetings
+            {% endif %}
+        </h3>
+        <p>
+            Set to:
+            {% if mtgs_displayed == 'all' %}
+            <a href="/meetings/{{ code }}/show_curr_mtgs">Show Only Current and Future Meetings</a>
+            {% else %}
+            <a href="/meetings/{{ code }}/show_all_mtgs">Show All Meetings</a>
+            {% endif %}
+        </p>
+        <table class="table table-striped" id="meetings">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Info</th>
+                    <th>Status</th>
+                    <th>Date/Time</th>
+                    <th>Created</th>
+                    <th>Updated</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for meeting in meetings %}
+            <tr>
+                <td>{{ meeting.mtg_name }}</td>
+                <td>{{ meeting.sub_name }}</td>
+                <td style="white-space: nowrap;">
+                    {% if "Agenda" in meeting %}
+                    <a href="{{ meeting['Agenda'] }}" target="_blank">A</a>
+                    {% endif %}
+                    {% if "Agenda Packet" in meeting %}
+                    <a href="{{ meeting['Agenda Packet'] }}" target="_blank">AP</a>
+                    {% endif %}
+                    {% if "Detail_Meeting" in meeting %}
+                    <a href="{{ meeting['Detail_Meeting'] }}" target="_blank">D</a>
+                    {% endif %}
+                    {% if "Video" in meeting %}
+                    <a href="{{ meeting['Video'] }}" target="_blank">V</a>
+                    {% endif %}
+                    {% if "Minutes" in meeting %}
+                    <a href="{{ meeting['Minutes'] }}" target="_blank">M</a>
+                    {% endif %}
+                    {% if "Summary of Proceedings" in meeting %}
+                    <a href="{{ meeting['Summary of Proceedings'] }}" target="_blank">SP</a>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if meeting.status != 'Scheduled' %}
+                    {{ meeting.status }}
+                    {% endif %}
+                </td>
+                <td style="white-space: nowrap;">{{ meeting.mtg_time }}</td>
+                <td>{{ meeting.created }}</td>
+                <td>
+                    {% if meeting.updated != meeting.created %}
+                    {{ meeting.updated }}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        {% endif %}
         </tbody>
     </table>
 </div>
