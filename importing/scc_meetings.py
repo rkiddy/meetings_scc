@@ -207,17 +207,44 @@ def insert_meetings(meetings) -> int:
         if epk is None:
             epk = get_entity_pk('SCC')
 
-        mtg_pk += 1
-
         full_name, scp_time = scrape.split('|')
+
+        # This happened with a meeting with name: Board of Supervisors - EQUIPMENT TEST - NOT A MEETING
+        #
+        if full_name.endswith("NOT A MEETING"):
+            continue
+
         full_name = full_name.replace("'", "''")
-        mtg_name, sub_name = full_name.split(' - ')
+        names = full_name.split(' - ')
+
+        # Combine parts of names where appropriate.
+        #
+        fillers = ['Special Meeting']
+
+        if len(names) > 2:
+            next_names = list()
+            for name in names:
+                if name in fillers:
+                    next_names[-1] = f"{names[-1]} - {name}"
+                else:
+                    next_names.append(name)
+                names = next_names.copy()
+
+        if len(names) == 2:
+            mtg_name = names[0]
+            sub_name = names[1]
+        else:
+            raise Exception(f"Too many items in meeting name, was: {full_name}")
+
         mtg_time = next_date_value(date_value(scp_time))
 
+        mtg_pk += 1
+
+        # TODO If I do not hard-code the entity_pk to 1, there may be an error where it is a list and not a number.
         sql = f"""insert into meetings
                 (pk, entity_pk, full_name, mtg_name, sub_name, mtg_time, scp_time, status, created, updated)
                 values (
-                {mtg_pk}, {epk},
+                {mtg_pk}, 1,
                 '{full_name}', '{mtg_name}', '{sub_name}',
                 '{mtg_time}', '{scp_time}',
                 '{meetings[scrape]['status']}',
