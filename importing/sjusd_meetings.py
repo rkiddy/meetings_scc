@@ -16,11 +16,13 @@ def fetch_web(url) -> list:
     resp = resp.replace('\r', '')
     return resp.split('\n')
 
+
 def db_exec(sql_engine, sql):
     if sql.strip().lower().startswith('select'):
         return [dict(r) for r in sql_engine.execute(sql).fetchall()]
     else:
         return sql_engine.execute(sql)
+
 
 def fetch_sjusd_meeting_dates(resp_lines) -> dict:
 
@@ -85,6 +87,7 @@ def fetch_sjusd_meeting_dates(resp_lines) -> dict:
 
     return meetings
 
+
 def find_new_meetings(all_found):
 
     sql = f"""
@@ -105,6 +108,7 @@ def find_new_meetings(all_found):
             added_mtgs.append(all_found[m_id])
 
     return added_mtgs
+
 
 def save_meetings(new_found):
 
@@ -155,6 +159,7 @@ def save_meetings(new_found):
 def find_updated_meetings(all_found):
     return []
 
+
 def update_meetings(updated_found):
     pass
 
@@ -180,6 +185,7 @@ if __name__ == '__main__':
         if len(new_mtgs) > 0:
             save_meetings(new_mtgs)
         print(f"\nmeetings unchanged # {len(found) - len(new_mtgs)}, added # {len(new_mtgs)}")
+        print("")
 
         updated_mtgs = find_updated_meetings(found)
         update_meetings(updated_mtgs)
